@@ -105,7 +105,6 @@ export default function AssignmentEditor() {
         </div>
       </div>
 
-      {/* Add Online Entry Options */}
       <div className="mb-4 row ms-5">
         <label htmlFor="wd-submission-type" className="col-sm-3 col-form-label">
           Submission Type
@@ -167,7 +166,6 @@ export default function AssignmentEditor() {
         </div>
       </div>
 
-      {/* Date Pickers for Due Date and Availability */}
       <div className="mb-4 row ms-5">
         <label htmlFor="wd-assign" className="col-sm-3 col-form-label">
           Assign
