@@ -42,7 +42,6 @@ export default function AssignmentEditor() {
           value={assignment.title}
           className="form-control"
           style={{ width: "100%" }}
-          readOnly
         />
       </div>
 
@@ -67,7 +66,6 @@ export default function AssignmentEditor() {
             value={assignment.points}
             className="form-control mb-3"
             style={{ width: "100%" }}
-            readOnly
           />
         </div>
 
@@ -80,7 +78,6 @@ export default function AssignmentEditor() {
             className="form-select mb-3"
             style={{ width: "100%" }}
             value={assignment.assignmentGroup}
-            disabled
           >
             <option value="Assignments">Assignments</option>
             <option value="Quizzes">Quizzes</option>
@@ -101,7 +98,6 @@ export default function AssignmentEditor() {
             className="form-select mb-3"
             style={{ width: "100%" }}
             value="Points"
-            disabled
           >
             <option value="Percentage">Percentage</option>
             <option value="Points">Points</option>
@@ -109,6 +105,7 @@ export default function AssignmentEditor() {
         </div>
       </div>
 
+      {/* Add Online Entry Options */}
       <div className="mb-4 row ms-5">
         <label htmlFor="wd-submission-type" className="col-sm-3 col-form-label">
           Submission Type
@@ -119,13 +116,58 @@ export default function AssignmentEditor() {
             className="form-select mb-3"
             style={{ width: "100%" }}
             value={assignment.submissionType}
-            disabled
           >
             <option value="Online">Online</option>
           </select>
+
+          <div className="form-group">
+            <label className="form-label">Online Entry Options</label>
+            <div className="form-check">
+              <input
+                id="wd-text-entry"
+                type="checkbox"
+                className="form-check-input"
+              />
+              <label htmlFor="wd-text-entry" className="form-check-label">
+                Text Entry
+              </label>
+            </div>
+            <div className="form-check">
+              <input
+                id="wd-website-url"
+                type="checkbox"
+                className="form-check-input"
+                checked
+              />
+              <label htmlFor="wd-website-url" className="form-check-label">
+                Website URL
+              </label>
+            </div>
+            <div className="form-check">
+              <input
+                id="wd-media-recordings"
+                type="checkbox"
+                className="form-check-input"
+              />
+              <label htmlFor="wd-media-recordings" className="form-check-label">
+                Media Recordings
+              </label>
+            </div>
+            <div className="form-check">
+              <input
+                id="wd-file-upload"
+                type="checkbox"
+                className="form-check-input"
+              />
+              <label htmlFor="wd-file-upload" className="form-check-label">
+                File Upload
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Date Pickers for Due Date and Availability */}
       <div className="mb-4 row ms-5">
         <label htmlFor="wd-assign" className="col-sm-3 col-form-label">
           Assign
@@ -139,7 +181,6 @@ export default function AssignmentEditor() {
             value="Everyone"
             className="form-control mb-2"
             style={{ width: "100%" }}
-            readOnly
           />
 
           <label htmlFor="wd-due-date" className="form-label">
@@ -152,7 +193,6 @@ export default function AssignmentEditor() {
               value={assignment.dueDate}
               className="form-control"
               style={{ width: "90%" }}
-              readOnly
             />
             <SlCalender className="ms-2" />
           </div>
@@ -168,7 +208,6 @@ export default function AssignmentEditor() {
                   type="date"
                   value={assignment.availableDate}
                   className="form-control"
-                  readOnly
                 />
                 <SlCalender className="ms-2" />
               </div>
@@ -183,7 +222,6 @@ export default function AssignmentEditor() {
                   type="date"
                   value={assignment.dueDate}
                   className="form-control"
-                  readOnly
                 />
                 <SlCalender className="ms-2" />
               </div>
