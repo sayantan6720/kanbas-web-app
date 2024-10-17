@@ -1,7 +1,36 @@
-import React from "react";
-import { SlCalender } from "react-icons/sl"; // Importing the calendar icon
+import React, { useState, useEffect } from "react";
+import { SlCalender } from "react-icons/sl";
+import { Link, useParams } from "react-router-dom";
+import * as db from "../../Database";
 
 export default function AssignmentEditor() {
+  const { cid, aid } = useParams();
+  interface Assignment {
+    _id: string;
+    title: string;
+    course: string;
+    description: string;
+    points: number;
+    dueDate: string;
+    availableDate: string;
+    submissionType: string;
+    assignmentGroup: string;
+  }
+
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+
+  useEffect(() => {
+    const selectedAssignment = db.assignments.find(
+      (assignment: Assignment) =>
+        assignment._id === aid && assignment.course === cid
+    );
+    setAssignment(selectedAssignment || null);
+  }, [aid, cid]);
+
+  if (!assignment) {
+    return <div>Assignment not found</div>;
+  }
+
   return (
     <div id="wd-assignments-editor" className="p-4">
       <div className="mb-4">
@@ -10,9 +39,10 @@ export default function AssignmentEditor() {
         </label>
         <input
           id="wd-name"
-          value="A1"
+          value={assignment.title}
           className="form-control"
           style={{ width: "100%" }}
+          readOnly
         />
       </div>
 
@@ -22,30 +52,7 @@ export default function AssignmentEditor() {
             The assignment is{" "}
             <span className="text-danger">available online</span>
           </p>
-          <p>
-            Submit a link to the landing page of your Web application running on{" "}
-            <a
-              href="https://main--fancy-otter-e999ca.netlify.app/#/Kanbas/Account/Signin"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Netlify
-            </a>
-            .
-          </p>
-          <p>The landing page should include the following:</p>
-          <ul>
-            <li>Your full name and section</li>
-            <li>Links to each of the lab assignments</li>
-            <li>
-              Link to the <a href="#">Kanbas</a> application
-            </li>
-            <li>Links to all relevant source code repositories</li>
-          </ul>
-          <p>
-            The <a href="#">Kanbas</a> application should include a link to
-            navigate back to the landing page.
-          </p>
+          <p>{assignment.description}</p>
         </div>
       </div>
 
@@ -57,9 +64,10 @@ export default function AssignmentEditor() {
           <input
             id="wd-points"
             type="number"
-            value={100}
+            value={assignment.points}
             className="form-control mb-3"
             style={{ width: "100%" }}
+            readOnly
           />
         </div>
 
@@ -71,6 +79,8 @@ export default function AssignmentEditor() {
             id="wd-group"
             className="form-select mb-3"
             style={{ width: "100%" }}
+            value={assignment.assignmentGroup}
+            disabled
           >
             <option value="Assignments">Assignments</option>
             <option value="Quizzes">Quizzes</option>
@@ -90,6 +100,8 @@ export default function AssignmentEditor() {
             id="wd-display-grade-as"
             className="form-select mb-3"
             style={{ width: "100%" }}
+            value="Points"
+            disabled
           >
             <option value="Percentage">Percentage</option>
             <option value="Points">Points</option>
@@ -106,54 +118,11 @@ export default function AssignmentEditor() {
             id="wd-submission-type"
             className="form-select mb-3"
             style={{ width: "100%" }}
+            value={assignment.submissionType}
+            disabled
           >
             <option value="Online">Online</option>
           </select>
-
-          <div className="form-group">
-            <label className="form-label">Online Entry Options</label>
-            <div className="form-check">
-              <input
-                id="wd-text-entry"
-                type="checkbox"
-                className="form-check-input"
-              />
-              <label htmlFor="wd-text-entry" className="form-check-label">
-                Text Entry
-              </label>
-            </div>
-            <div className="form-check">
-              <input
-                id="wd-website-url"
-                type="checkbox"
-                className="form-check-input"
-                checked
-              />
-              <label htmlFor="wd-website-url" className="form-check-label">
-                Website URL
-              </label>
-            </div>
-            <div className="form-check">
-              <input
-                id="wd-media-recordings"
-                type="checkbox"
-                className="form-check-input"
-              />
-              <label htmlFor="wd-media-recordings" className="form-check-label">
-                Media Recordings
-              </label>
-            </div>
-            <div className="form-check">
-              <input
-                id="wd-file-upload"
-                type="checkbox"
-                className="form-check-input"
-              />
-              <label htmlFor="wd-file-upload" className="form-check-label">
-                File Upload
-              </label>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -170,6 +139,7 @@ export default function AssignmentEditor() {
             value="Everyone"
             className="form-control mb-2"
             style={{ width: "100%" }}
+            readOnly
           />
 
           <label htmlFor="wd-due-date" className="form-label">
@@ -179,11 +149,12 @@ export default function AssignmentEditor() {
             <input
               id="wd-due-date"
               type="date"
-              value="2024-05-13"
+              value={assignment.dueDate}
               className="form-control"
               style={{ width: "90%" }}
+              readOnly
             />
-            <SlCalender className="ms-2" /> {/* Added calendar icon */}
+            <SlCalender className="ms-2" />
           </div>
 
           <div className="row">
@@ -195,10 +166,11 @@ export default function AssignmentEditor() {
                 <input
                   id="wd-available-from"
                   type="date"
-                  value="2024-05-06"
+                  value={assignment.availableDate}
                   className="form-control"
+                  readOnly
                 />
-                <SlCalender className="ms-2" /> {/* Added calendar icon */}
+                <SlCalender className="ms-2" />
               </div>
             </div>
             <div className="col-md-6">
@@ -209,10 +181,11 @@ export default function AssignmentEditor() {
                 <input
                   id="wd-available-to"
                   type="date"
-                  value="2024-05-13"
+                  value={assignment.dueDate}
                   className="form-control"
+                  readOnly
                 />
-                <SlCalender className="ms-2" /> {/* Added calendar icon */}
+                <SlCalender className="ms-2" />
               </div>
             </div>
           </div>
@@ -222,7 +195,12 @@ export default function AssignmentEditor() {
       <hr />
 
       <div className="d-flex justify-content-end gap-2">
-        <button className="btn btn-lg btn-secondary">Cancel</button>
+        <Link
+          to={`/Kanbas/Courses/${cid}/Assignments`}
+          className="btn btn-lg btn-secondary"
+        >
+          Cancel
+        </Link>
         <button className="btn btn-lg btn-danger">Save</button>
       </div>
     </div>

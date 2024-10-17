@@ -43,7 +43,7 @@ export default function ModulesControls() {
               Publish modules only
             </a>
           </li>
-          {/* New items as per the comment */}
+
           <li>
             <a
               id="wd-unpublish-all-modules-and-items"
@@ -67,7 +67,6 @@ export default function ModulesControls() {
         </ul>
       </div>
 
-      {/* View Progress button */}
       <button
         id="wd-view-progress"
         className="btn btn-lg btn-secondary me-1 float-end"
@@ -75,7 +74,6 @@ export default function ModulesControls() {
         View Progress
       </button>
 
-      {/* Collapse All button */}
       <button
         id="wd-collapse-all"
         className="btn btn-lg btn-secondary me-1 float-end"
