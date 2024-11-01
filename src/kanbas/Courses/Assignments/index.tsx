@@ -1,26 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import { HiMiniMagnifyingGlass } from "react-icons/hi2";
-import { BsGripVertical, BsThreeDotsVertical, BsPlus } from "react-icons/bs";
+import {
+  BsGripVertical,
+  BsThreeDotsVertical,
+  BsPlus,
+  BsTrash,
+} from "react-icons/bs";
 import { RxTriangleDown } from "react-icons/rx";
 import { FaCheckCircle } from "react-icons/fa";
 import { MdOutlineNoteAlt } from "react-icons/md";
-import { Link, useParams } from "react-router-dom";
-import * as db from "../../Database";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { deleteAssignment } from "./reducer";
 
 export default function Assignments() {
   const { cid } = useParams();
-  const assignments: {
-    _id: string;
-    course: string;
-    title: string;
-    availableDate: string;
-    dueDate: string;
-    points: number;
-  }[] = db.assignments;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { assignments } = useSelector((state: any) => state.assignmentsReducer);
+  const { currentUser } = useSelector((state: any) => state.accountReducer);
+
+  const isFaculty = currentUser?.role === "FACULTY";
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<
+    string | null
+  >(null);
 
   const filteredAssignments = assignments.filter(
     (assignment: { course: string }) => assignment.course === cid
   );
+
+  const handleDeleteClick = (assignmentId: string) => {
+    setSelectedAssignmentId(assignmentId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedAssignmentId) {
+      dispatch(deleteAssignment(selectedAssignmentId));
+      setSelectedAssignmentId(null);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setSelectedAssignmentId(null);
+    setShowDeleteDialog(false);
+  };
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -56,10 +83,17 @@ export default function Assignments() {
           />
         </div>
 
-        <div className="d-flex gap-2">
-          <button className="btn btn-lg btn-light border">+ Group</button>
-          <button className="btn btn-lg btn-danger">+ Assignment</button>
-        </div>
+        {isFaculty && (
+          <div className="d-flex gap-2">
+            <button className="btn btn-lg btn-light border">+ Group</button>
+            <button
+              className="btn btn-lg btn-danger"
+              onClick={() => navigate(`/Kanbas/Courses/${cid}/Assignments/New`)}
+            >
+              + Assignment
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="wd-module list-group-item p-0 mb-5 fs-5 border-gray">
@@ -98,7 +132,11 @@ export default function Assignments() {
                     <MdOutlineNoteAlt className="me-2 fs-5 text-muted" />
                     <div>
                       <Link
-                        to={`/Kanbas/Courses/${cid}/Assignments/${assignment._id}`}
+                        to={
+                          isFaculty
+                            ? `/Kanbas/Courses/${cid}/Assignments/${assignment._id}`
+                            : "#"
+                        }
                         className="text-dark fw-bold text-decoration-none"
                       >
                         {assignment.title}
@@ -116,11 +154,15 @@ export default function Assignments() {
                       </small>
                     </div>
                   </div>
-
-                  <div className="d-flex align-items-center">
-                    <FaCheckCircle className="text-success me-3" />
-                    <BsThreeDotsVertical className="text-muted" />
-                  </div>
+                  {isFaculty && (
+                    <div className="d-flex align-items-center">
+                      <FaCheckCircle className="text-success me-3" />
+                      <BsTrash
+                        className="text-muted cursor-pointer"
+                        onClick={() => handleDeleteClick(assignment._id)}
+                      />
+                    </div>
+                  )}
                 </li>
               )
             )
@@ -131,6 +173,34 @@ export default function Assignments() {
           )}
         </ul>
       </div>
+
+      {showDeleteDialog && (
+        <div className="modal" style={{ display: "block" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Delete Assignment</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={cancelDelete}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to delete this assignment?</p>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={cancelDelete}>
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={confirmDelete}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
