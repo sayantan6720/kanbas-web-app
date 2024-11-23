@@ -86,20 +86,18 @@ export default function AssignmentEditor() {
   const handleSave = () => {
     if (!cid) {
       console.error("Missing course ID!");
-      return; // Prevent saving if essential data is missing
+      return;
     }
 
     const assignmentToSave = {
       ...assignment,
-      course: cid, // Ensure course is included
-      _id: aid === "new" ? undefined : assignment._id, // Let the backend generate the _id for new assignments
+      course: cid,
+      _id: aid === "new" ? undefined : assignment._id,
     };
 
     if (aid === "new") {
-      // Create a new assignment
       createAssignmentForCourse(cid, assignmentToSave)
         .then((newAssignment: any) => {
-          // Ensure the backend returns the created assignment with the correct _id
           dispatch(addAssignment(newAssignment));
           navigate(`/Kanbas/Courses/${cid}/Assignments`);
         })
@@ -107,7 +105,6 @@ export default function AssignmentEditor() {
           console.error("Error creating assignment:", error);
         });
     } else {
-      // Update the existing assignment
       updateAssignmentAPI(assignmentToSave)
         .then((updatedAssignment: any) => {
           dispatch(updateAssignment(updatedAssignment));

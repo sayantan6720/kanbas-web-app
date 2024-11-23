@@ -15,27 +15,26 @@ import { deleteAssignment, setAssignments } from "./reducer";
 import { findAssignmentsForCourse, deleteAssignmentAPI } from "./client";
 
 export default function Assignments() {
-  const { cid } = useParams<{ cid: string }>(); // Ensure correct typing for courseId
+  const { cid } = useParams<{ cid: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { assignments } = useSelector((state: any) => state.assignmentsReducer);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
-  const isFaculty = currentUser?.role === "FACULTY"; // Check if the current user is a faculty member
+  const isFaculty = currentUser?.role === "FACULTY";
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<
     null | string
   >(null);
-  const [searchTerm, setSearchTerm] = useState(""); // To hold the search term input
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch assignments for the selected course
   useEffect(() => {
     const fetchAssignments = async () => {
       if (!cid) return;
       try {
         const courseAssignments = await findAssignmentsForCourse(cid);
-        dispatch(setAssignments(courseAssignments)); // Set assignments in Redux
+        dispatch(setAssignments(courseAssignments));
       } catch (error) {
         console.error("Error fetching assignments:", error);
       }
@@ -43,12 +42,10 @@ export default function Assignments() {
     fetchAssignments();
   }, [cid, dispatch]);
 
-  // Filter assignments based on the search term
   const filteredAssignments = assignments.filter((assignment: any) =>
     assignment.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Format date to a readable format
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
     const monthNames = [
@@ -68,13 +65,11 @@ export default function Assignments() {
     return `${monthNames[month - 1]} ${day}, ${year}`;
   };
 
-  // Handle delete button click
   const handleDeleteClick = (assignmentId: string) => {
     setSelectedAssignmentId(assignmentId);
     setShowDeleteDialog(true);
   };
 
-  // Confirm delete assignment
   const confirmDelete = async () => {
     if (selectedAssignmentId) {
       try {
@@ -88,7 +83,6 @@ export default function Assignments() {
     }
   };
 
-  // Cancel delete action
   const cancelDelete = () => {
     setSelectedAssignmentId(null);
     setShowDeleteDialog(false);
