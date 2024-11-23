@@ -30,26 +30,25 @@ const assignmentsSlice = createSlice({
         (assignment) => assignment._id !== assignmentId // Remove assignment based on ID
       );
     },
-    // Action to update an existing assignment
+  
     updateAssignment: (state, { payload: updatedAssignment }) => {
       state.assignments = state.assignments.map((assignment) =>
         assignment._id === updatedAssignment._id
-          ? { ...assignment, ...updatedAssignment } // Merge the updated fields
+          ? { ...assignment, ...updatedAssignment }
           : assignment
       );
     },
-    // Action to mark an assignment as being edited (e.g., toggling the editing state)
+
     editAssignment: (state, { payload: assignmentId }) => {
       state.assignments = state.assignments.map((assignment) =>
         assignment._id === assignmentId
-          ? { ...assignment, editing: true } // Set the editing flag to true
+          ? { ...assignment, editing: true } 
           : assignment
       );
     },
-    // Action to set all assignments (for example, after fetching from an API)
+
     setAssignments: (state, { payload: assignments }) => {
-      state.assignments = assignments; // Set the assignments directly
-    },
+      state.assignments = assignments; 
   },
 });
 
