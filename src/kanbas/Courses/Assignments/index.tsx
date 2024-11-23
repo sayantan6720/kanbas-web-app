@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HiMiniMagnifyingGlass } from "react-icons/hi2";
 import {
   BsGripVertical,
@@ -11,44 +11,44 @@ import { FaCheckCircle } from "react-icons/fa";
 import { MdOutlineNoteAlt } from "react-icons/md";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { deleteAssignment } from "./reducer";
+import { deleteAssignment, setAssignments } from "./reducer";
+import { findAssignmentsForCourse, deleteAssignmentAPI } from "./client";
 
 export default function Assignments() {
-  const { cid } = useParams();
+  const { cid } = useParams<{ cid: string }>(); // Ensure correct typing for courseId
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { assignments } = useSelector((state: any) => state.assignmentsReducer);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
-  const isFaculty = currentUser?.role === "FACULTY";
+  const isFaculty = currentUser?.role === "FACULTY"; // Check if the current user is a faculty member
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<
-    string | null
+    null | string
   >(null);
+  const [searchTerm, setSearchTerm] = useState(""); // To hold the search term input
 
-  const filteredAssignments = assignments.filter(
-    (assignment: { course: string }) => assignment.course === cid
+  // Fetch assignments for the selected course
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      if (!cid) return;
+      try {
+        const courseAssignments = await findAssignmentsForCourse(cid);
+        dispatch(setAssignments(courseAssignments)); // Set assignments in Redux
+      } catch (error) {
+        console.error("Error fetching assignments:", error);
+      }
+    };
+    fetchAssignments();
+  }, [cid, dispatch]);
+
+  // Filter assignments based on the search term
+  const filteredAssignments = assignments.filter((assignment: any) =>
+    assignment.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDeleteClick = (assignmentId: string) => {
-    setSelectedAssignmentId(assignmentId);
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = () => {
-    if (selectedAssignmentId) {
-      dispatch(deleteAssignment(selectedAssignmentId));
-      setSelectedAssignmentId(null);
-      setShowDeleteDialog(false);
-    }
-  };
-
-  const cancelDelete = () => {
-    setSelectedAssignmentId(null);
-    setShowDeleteDialog(false);
-  };
-
+  // Format date to a readable format
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
     const monthNames = [
@@ -68,6 +68,32 @@ export default function Assignments() {
     return `${monthNames[month - 1]} ${day}, ${year}`;
   };
 
+  // Handle delete button click
+  const handleDeleteClick = (assignmentId: string) => {
+    setSelectedAssignmentId(assignmentId);
+    setShowDeleteDialog(true);
+  };
+
+  // Confirm delete assignment
+  const confirmDelete = async () => {
+    if (selectedAssignmentId) {
+      try {
+        await deleteAssignmentAPI(selectedAssignmentId); // Delete from API
+        dispatch(deleteAssignment(selectedAssignmentId)); // Update Redux state
+        setSelectedAssignmentId(null);
+        setShowDeleteDialog(false);
+      } catch (error) {
+        console.error("Error deleting assignment:", error);
+      }
+    }
+  };
+
+  // Cancel delete action
+  const cancelDelete = () => {
+    setSelectedAssignmentId(null);
+    setShowDeleteDialog(false);
+  };
+
   return (
     <div id="wd-assignments" className="p-3">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -80,6 +106,8 @@ export default function Assignments() {
             type="text"
             placeholder="Search..."
             className="form-control border-start-0"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)} // Update search term
           />
         </div>
 
@@ -105,7 +133,7 @@ export default function Assignments() {
           </div>
           <div className="d-flex align-items-center">
             <span className="badge rounded-pill border border-dark text-muted px-3 py-1">
-              40% of Total
+              {filteredAssignments.length} Total
             </span>
             <BsPlus className="me-3 fs-4 text-muted" />
             <BsThreeDotsVertical className="text-muted" />
@@ -114,58 +142,50 @@ export default function Assignments() {
 
         <ul id="wd-assignment-list" className="list-group">
           {filteredAssignments.length > 0 ? (
-            filteredAssignments.map(
-              (assignment: {
-                _id: string;
-                title: string;
-                availableDate: string;
-                dueDate: string;
-                points: number;
-              }) => (
-                <li
-                  key={assignment._id}
-                  className="wd-assignment-list-item list-group-item d-flex justify-content-between align-items-center"
-                  style={{ borderLeft: "5px solid green", borderRadius: "0" }}
-                >
-                  <div className="d-flex align-items-center">
-                    <BsGripVertical className="me-3 fs-5 text-muted" />
-                    <MdOutlineNoteAlt className="me-2 fs-5 text-muted" />
-                    <div>
-                      <Link
-                        to={
-                          isFaculty
-                            ? `/Kanbas/Courses/${cid}/Assignments/${assignment._id}`
-                            : "#"
-                        }
-                        className="text-dark fw-bold text-decoration-none"
-                      >
-                        {assignment.title}
-                      </Link>
-                      <br />
-                      <small className="text-muted">
-                        <span className="text-danger">Multiple Modules</span> |{" "}
-                        <strong>Not available until:</strong>{" "}
-                        {formatDate(assignment.availableDate)} |
-                      </small>
-                      <br />
-                      <small className="text-muted">
-                        <strong>Due:</strong> {formatDate(assignment.dueDate)} |{" "}
-                        {assignment.points} pts
-                      </small>
-                    </div>
+            filteredAssignments.map((assignment: any) => (
+              <li
+                key={assignment._id}
+                className="wd-assignment-list-item list-group-item d-flex justify-content-between align-items-center"
+                style={{ borderLeft: "5px solid green", borderRadius: "0" }}
+              >
+                <div className="d-flex align-items-center">
+                  <BsGripVertical className="me-3 fs-5 text-muted" />
+                  <MdOutlineNoteAlt className="me-2 fs-5 text-muted" />
+                  <div>
+                    <Link
+                      to={
+                        isFaculty
+                          ? `/Kanbas/Courses/${cid}/Assignments/${assignment._id}`
+                          : "#"
+                      }
+                      className="text-dark fw-bold text-decoration-none"
+                    >
+                      {assignment.title}
+                    </Link>
+                    <br />
+                    <small className="text-muted">
+                      <span className="text-danger">Multiple Modules</span> |{" "}
+                      <strong>Not available until:</strong>{" "}
+                      {formatDate(assignment.availableDate)} |
+                    </small>
+                    <br />
+                    <small className="text-muted">
+                      <strong>Due:</strong> {formatDate(assignment.dueDate)} |{" "}
+                      {assignment.points} pts
+                    </small>
                   </div>
-                  {isFaculty && (
-                    <div className="d-flex align-items-center">
-                      <FaCheckCircle className="text-success me-3" />
-                      <BsTrash
-                        className="text-muted cursor-pointer"
-                        onClick={() => handleDeleteClick(assignment._id)}
-                      />
-                    </div>
-                  )}
-                </li>
-              )
-            )
+                </div>
+                {isFaculty && (
+                  <div className="d-flex align-items-center">
+                    <FaCheckCircle className="text-success me-3" />
+                    <BsTrash
+                      className="text-muted cursor-pointer"
+                      onClick={() => handleDeleteClick(assignment._id)}
+                    />
+                  </div>
+                )}
+              </li>
+            ))
           ) : (
             <li className="list-group-item">
               No assignments found for this course.
@@ -189,6 +209,7 @@ export default function Assignments() {
               <div className="modal-body">
                 <p>Are you sure you want to delete this assignment?</p>
               </div>
+              s
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={cancelDelete}>
                   Cancel

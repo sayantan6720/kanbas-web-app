@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -21,6 +17,9 @@
     "jsx": "preserve"
   },
   "include": [
-    "src"
+    "src",
+    "../kanbas-node-server-app/Lab5",
+    "../kanbas-node-server-app/kanbas/Users",
+    "../kanbas-node-server-app/kanbas/Database"
   ]
 }

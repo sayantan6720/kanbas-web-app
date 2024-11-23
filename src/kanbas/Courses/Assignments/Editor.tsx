@@ -1,31 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addAssignment, updateAssignment } from "./reducer";
 import { SlCalender } from "react-icons/sl";
+import {
+  createAssignmentForCourse,
+  updateAssignmentAPI,
+  findAssignmentsForCourse,
+} from "./client"; // Assuming this is the client you already have
 
 export default function AssignmentEditor() {
-  const { cid, aid } = useParams();
+  const { cid, aid } = useParams<{ cid: string; aid: string }>(); // Ensure correct typing
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { assignments } = useSelector((state: any) => state.assignmentsReducer);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
-
   const isFaculty = currentUser?.role === "FACULTY";
 
-  useEffect(() => {
-    if (!isFaculty) {
-      navigate(`/Kanbas/Courses/${cid}/Assignments`);
-    }
-  }, [isFaculty, navigate, cid]);
-
-  const existingAssignment = assignments.find(
-    (assignment: any) => assignment._id === aid && assignment.course === cid
-  );
-
+  // Initialize state for assignment
   const [assignment, setAssignment] = useState({
-    id: "",
+    _id: "",
     title: "",
     description: "",
     points: 0,
@@ -34,23 +28,38 @@ export default function AssignmentEditor() {
     untilDate: "",
     assignmentGroup: "Assignments",
     submissionType: "Online",
+    onlineEntryOptions: [] as string[], // To track selected checkboxes
   });
 
+  // Fetch assignment data if editing
   useEffect(() => {
-    if (existingAssignment) {
-      setAssignment({
-        id: existingAssignment._id,
-        title: existingAssignment.title,
-        description: existingAssignment.description,
-        points: existingAssignment.points,
-        dueDate: existingAssignment.dueDate,
-        availableDate: existingAssignment.availableDate,
-        untilDate: existingAssignment.untilDate || "",
-        assignmentGroup: existingAssignment.assignmentGroup,
-        submissionType: existingAssignment.submissionType || "Online",
-      });
+    if (aid !== "new" && cid) {
+      // Ensure cid is defined before making the API call
+      findAssignmentsForCourse(cid)
+        .then((assignments) => {
+          const existingAssignment = assignments.find(
+            (assignment: any) => assignment._id === aid
+          );
+          if (existingAssignment) {
+            setAssignment({
+              _id: existingAssignment._id,
+              title: existingAssignment.title,
+              description: existingAssignment.description,
+              points: existingAssignment.points,
+              dueDate: existingAssignment.dueDate,
+              availableDate: existingAssignment.availableDate,
+              untilDate: existingAssignment.untilDate || "",
+              assignmentGroup: existingAssignment.assignmentGroup,
+              submissionType: existingAssignment.submissionType || "Online",
+              onlineEntryOptions: existingAssignment.onlineEntryOptions || [], // Assign existing values
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching assignments:", error);
+        });
     }
-  }, [existingAssignment]);
+  }, [aid, cid]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -61,19 +70,53 @@ export default function AssignmentEditor() {
     setAssignment({ ...assignment, [name]: value });
   };
 
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    setAssignment((prevAssignment) => {
+      const updatedOptions = checked
+        ? [...prevAssignment.onlineEntryOptions, value]
+        : prevAssignment.onlineEntryOptions.filter(
+            (option) => option !== value
+          );
+
+      return { ...prevAssignment, onlineEntryOptions: updatedOptions };
+    });
+  };
+
   const handleSave = () => {
-    if (existingAssignment) {
-      dispatch(
-        updateAssignment({
-          ...assignment,
-          _id: existingAssignment._id,
-          course: cid,
-        })
-      );
-    } else {
-      dispatch(addAssignment({ ...assignment, course: cid }));
+    if (!cid) {
+      console.error("Missing course ID!");
+      return; // Prevent saving if essential data is missing
     }
-    navigate(`/Kanbas/Courses/${cid}/Assignments`);
+
+    const assignmentToSave = {
+      ...assignment,
+      course: cid, // Ensure course is included
+      _id: aid === "new" ? undefined : assignment._id, // Let the backend generate the _id for new assignments
+    };
+
+    if (aid === "new") {
+      // Create a new assignment
+      createAssignmentForCourse(cid, assignmentToSave)
+        .then((newAssignment: any) => {
+          // Ensure the backend returns the created assignment with the correct _id
+          dispatch(addAssignment(newAssignment));
+          navigate(`/Kanbas/Courses/${cid}/Assignments`);
+        })
+        .catch((error: any) => {
+          console.error("Error creating assignment:", error);
+        });
+    } else {
+      // Update the existing assignment
+      updateAssignmentAPI(assignmentToSave)
+        .then((updatedAssignment: any) => {
+          dispatch(updateAssignment(updatedAssignment));
+          navigate(`/Kanbas/Courses/${cid}/Assignments`);
+        })
+        .catch((error: any) => {
+          console.error("Error updating assignment:", error);
+        });
+    }
   };
 
   return (
@@ -122,6 +165,7 @@ export default function AssignmentEditor() {
             value={assignment.points}
             onChange={handleInputChange}
             className="form-control mb-3"
+            style={{ width: "100%" }}
           />
         </div>
 
@@ -179,6 +223,9 @@ export default function AssignmentEditor() {
                 id="text-entry"
                 type="checkbox"
                 className="form-check-input"
+                value="Text Entry"
+                checked={assignment.onlineEntryOptions.includes("Text Entry")}
+                onChange={handleCheckboxChange}
               />
               <label htmlFor="text-entry" className="form-check-label">
                 Text Entry
@@ -189,6 +236,9 @@ export default function AssignmentEditor() {
                 id="website-url"
                 type="checkbox"
                 className="form-check-input"
+                value="Website URL"
+                checked={assignment.onlineEntryOptions.includes("Website URL")}
+                onChange={handleCheckboxChange}
               />
               <label htmlFor="website-url" className="form-check-label">
                 Website URL
@@ -199,6 +249,11 @@ export default function AssignmentEditor() {
                 id="media-recordings"
                 type="checkbox"
                 className="form-check-input"
+                value="Media Recordings"
+                checked={assignment.onlineEntryOptions.includes(
+                  "Media Recordings"
+                )}
+                onChange={handleCheckboxChange}
               />
               <label htmlFor="media-recordings" className="form-check-label">
                 Media Recordings
@@ -209,6 +264,9 @@ export default function AssignmentEditor() {
                 id="file-upload"
                 type="checkbox"
                 className="form-check-input"
+                value="File Upload"
+                checked={assignment.onlineEntryOptions.includes("File Upload")}
+                onChange={handleCheckboxChange}
               />
               <label htmlFor="file-upload" className="form-check-label">
                 File Upload

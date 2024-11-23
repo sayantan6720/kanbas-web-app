@@ -1,17 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { assignments } from "../../Database";
+import { assignments } from "../../Database"; // Assuming assignments come from your database or a mock
 
 const initialState = {
-  assignments: assignments,
+  assignments: assignments, // Populate the state with data from your mock database or initial state
 };
 
 const assignmentsSlice = createSlice({
   name: "assignments",
   initialState,
   reducers: {
+    // Action to add a new assignment
     addAssignment: (state, { payload: assignment }) => {
       const newAssignment = {
-        _id: new Date().getTime().toString(),
+        _id: new Date().getTime().toString(), // Generating a unique ID for the new assignment
         title: assignment.title,
         course: assignment.course,
         availableDate: assignment.availableDate,
@@ -21,26 +22,33 @@ const assignmentsSlice = createSlice({
         submissionType: assignment.submissionType,
         assignmentGroup: assignment.assignmentGroup,
       };
-      state.assignments = [...state.assignments, newAssignment];
+      state.assignments = [...state.assignments, newAssignment]; // Add the new assignment to the state
     },
+    // Action to delete an assignment
     deleteAssignment: (state, { payload: assignmentId }) => {
       state.assignments = state.assignments.filter(
-        (assignment) => assignment._id !== assignmentId
+        (assignment) => assignment._id !== assignmentId // Remove assignment based on ID
       );
     },
+    // Action to update an existing assignment
     updateAssignment: (state, { payload: updatedAssignment }) => {
       state.assignments = state.assignments.map((assignment) =>
         assignment._id === updatedAssignment._id
-          ? { ...assignment, ...updatedAssignment }
+          ? { ...assignment, ...updatedAssignment } // Merge the updated fields
           : assignment
       );
     },
+    // Action to mark an assignment as being edited (e.g., toggling the editing state)
     editAssignment: (state, { payload: assignmentId }) => {
       state.assignments = state.assignments.map((assignment) =>
         assignment._id === assignmentId
-          ? { ...assignment, editing: true }
+          ? { ...assignment, editing: true } // Set the editing flag to true
           : assignment
       );
+    },
+    // Action to set all assignments (for example, after fetching from an API)
+    setAssignments: (state, { payload: assignments }) => {
+      state.assignments = assignments; // Set the assignments directly
     },
   },
 });
@@ -50,5 +58,7 @@ export const {
   deleteAssignment,
   updateAssignment,
   editAssignment,
+  setAssignments, // Exporting the setAssignments action
 } = assignmentsSlice.actions;
+
 export default assignmentsSlice.reducer;
