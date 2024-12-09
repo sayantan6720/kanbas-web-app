@@ -110,5 +110,19 @@
     "section": "S101",
     "lastActivity": "2020-11-11",
     "totalActivity": "21:32:43"
+  },
+  {
+    "_id": "901",
+    "username": "admin_user",
+    "password": "admin123",
+    "firstName": "Admin",
+    "lastName": "User",
+    "email": "admin@domain.com",
+    "dob": "1980-01-01",
+    "role": "ADMIN",
+    "loginId": "001234570S",
+    "section": "S101",
+    "lastActivity": "2020-12-05",
+    "totalActivity": "00:00:00"
   }
 ]
